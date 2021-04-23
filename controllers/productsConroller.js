@@ -1,7 +1,10 @@
 const pg = require('pg');
-exports.getAllProducts = function(req, res) {
+const productsRepo = require('../repos/products_repo.js')
 
-    res.send('All products');
+exports.getAllProducts =  async function(req, res) {
+    const products = await productsRepo.getAllProducts();
+    res.send(products)
+    //res.send('All products');
 }
 exports.searchProducts = function (req, res) {
     res.send('Search products');
