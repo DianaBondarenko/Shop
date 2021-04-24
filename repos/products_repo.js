@@ -7,7 +7,8 @@ class ProductsRepo {
         return rows;
     }
     static async findByCategory(categories) {
-        const {rows} = await pool.query(`SELECT id, name, manufacture, category FROM products_full WHERE category='${categories}';`);
+        categories = categories.split(',').map(el => `'${el}'`).join(',');
+        const {rows} = await pool.query(`SELECT id, name, manufacture, category FROM products_full WHERE category IN (${categories});`);
         return rows;
     }
     static async getProductDetails(id) {
