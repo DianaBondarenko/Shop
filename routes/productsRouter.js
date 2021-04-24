@@ -5,7 +5,7 @@ const productsRouter = express.Router();
 const productId = /\/\d+/;
 
 productsRouter.use('/search', productsController.searchProducts);
-productsRouter.use(productId, productsController.detailedProductInfo);
+productsRouter.use('/:id', productsController.getProductDetails);
 productsRouter.use('/', productsController.getAllProducts);
 
 module.exports = productsRouter;
