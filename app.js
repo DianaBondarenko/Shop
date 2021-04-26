@@ -8,6 +8,8 @@ const productsRepo = require('./repos/products_repo.js')
 // const PORT = 3000;
 
 const app = express();
+app.use(express.json());
+app.use(express.urlencoded({extended:false}));
 const PORT = 3000;
 
 app.use('/products', productsRouter);
