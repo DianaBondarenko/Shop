@@ -1,22 +1,24 @@
-const pool = require('../pool.js');
+const pool = require('./pool.js');
 
-class ProductsRepo {
-    static async getAllProducts() {
+class ProductModel {
+    async getAllProducts() {
         const {rows} = await pool.query('SELECT id, name, manufacture, category FROM products_full;');
         //console.log(rows);
         return rows;
     }
 
-    static async findByCategory(categories) {
+    async findByCategory(categories) {
         categories = categories.split(',').map(el => `'${el}'`).join(',');
+        console.log(categories);
         const {rows} = await pool.query(`SELECT id, name, manufacture, category FROM products_full WHERE category IN (${categories});`);
+        //console.log(rows);
         return rows;
     }
 
-    static async getProductDetails(id) {
+    async getProductDetails(id) {
         const {rows} = await pool.query(`SELECT * FROM products_full WHERE id=$1;`, [id]);
         return rows;
     }
 }
 
-module.exports = ProductsRepo;
+module.exports = new ProductModel();

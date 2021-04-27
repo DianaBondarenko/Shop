@@ -1,21 +1,16 @@
 const express = require('express');
-const productsRouter = require('./routes/productsRouter.js');
+const productRouter = require('./routes/productRouter.js');
 const orderRouter = require('./routes/orderRouter.js');
-const pool = require('./pool.js');
-const productsRepo = require('./repos/products_repo.js')
-
-// const app = express();
-// const PORT = 3000;
+const pool = require('./models/pool.js');
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({extended:false}));
 const PORT = 3000;
 
-app.use('/products', productsRouter);
+app.use('/products', productRouter);
 app.use('/order', orderRouter);
-// обработка ошибки 404
-app.use((req, res, next)  => {
+app.use((req, res)  => {
     res.status(404).send('Not Found');
 });
 

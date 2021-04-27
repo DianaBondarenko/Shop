@@ -1,4 +1,4 @@
-const pool = require('../pool.js');
+const pool = require('./pool.js');
 
 class OrderRepo {
     static async createOrder(products, user) {
