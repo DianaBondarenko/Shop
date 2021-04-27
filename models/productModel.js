@@ -45,6 +45,14 @@ class ProductModel {
         const {rows} = await pool.query(`SELECT * FROM products_full WHERE id = $1;`, [id]);
         return rows;
     }
+    checkParams(params) {
+        const {name, manufacture, categories } = params;
+        const res = [];
+        // if (name && typeof name === 'string' && name.match(/[a-z]{1,100}/)) res.push(name);
+        // if (manufacture && typeof name === 'string' && manufacture.match(/[a-z]{1,100}/)) res.push(name);
+        if (categories.split(',').every(el => !isNaN(Number(el)))) res.push(categories);
+        return res;
+    }
 }
 
 module.exports = new ProductModel();
