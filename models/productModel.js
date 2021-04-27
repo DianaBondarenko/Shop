@@ -42,7 +42,7 @@ class ProductModel {
         return rows;
     }
     async getProductDetails(id) {
-        const {rows} = await pool.query(`SELECT * FROM products_full WHERE id=$1;`, [id]);
+        const {rows} = await pool.query(`SELECT * FROM products_full WHERE id = $1;`, [id]);
         return rows;
     }
 }
