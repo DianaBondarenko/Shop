@@ -1,6 +1,6 @@
 class OrderView {
     send(response, result) {
-        response.send(result);
+        response.json(result);
     }
 }
 

@@ -3,48 +3,87 @@ const nodeMailer = require('./nodemailer.js');
 
 class OrderModel {
     async createUser(user) {
-        //const {name, phone, email} = user;
         const {name, phone, email} = this.getValidUserInfo(user);
-        if (!name || !phone) return this.getError([],'User info is not valid');
+        if (!name || !phone) return this.getError([], 'User info is not valid');
         try {
-            const {rows} = await pool.query(`SELECT id, name FROM users WHERE phone = '${phone}';`);
-            if (rows) return this.getOk([{id: rows[0].id}]);
-        } catch (e) {}
+            const {rows} = await pool.query(`SELECT * FROM users WHERE phone = '${phone}';`);
+            if (rows.length > 0) return this.getOk(rows);
+        } catch (e) {
+        }
         const {rows} = await pool.query(`INSERT INTO users (name,phone,email) VALUES ($1, $2, $3) RETURNING *;`,
             [name, phone, email]);
-        return this.getOk([{id: rows[0].id, name:rows[0].name}]);
+        return this.getOk(rows);
     }
+    /////
+    // async createOrder(products, userId) {
+    //     const notFoundProducts = [];
+    //     for (let i = 0; i < products.length; i++) {
+    //         const {rows} = await pool.query('SELECT id FROM products WHERE id = $1 ;', [products[i].id]);
+    //         if (rows.length === 0) notFoundProducts.push(products[i].id);
+    //     }
+    //     if (notFoundProducts.length > 0) return this.getError(notFoundProducts, 'Products are not found');
+    //
+    //     const {rows} = await pool.query(`INSERT INTO orders (user_id) VALUES ($1) RETURNING *;`, [userId]);
+    //     const orderId = rows[0].id;
+    //     for (let i = 0; i < products.length; i++) {
+    //         let el = products[i];
+    //         const {rows} = await pool.query(`INSERT INTO order_items (order_id, product_id, count) VALUES ($1, $2, $3);`,
+    //             [orderId, el.id, el.count]);
+    //     }
+    //     const order = await pool.query(`UPDATE orders SET total_price = ( SELECT SUM(price*count) FROM order_items
+    //      JOIN products ON order_items.product_id = products.id WHERE order_id = $1) WHERE id = $1 RETURNING *;`, [orderId])
+    //     //await nodeMailer.sendMail(user, products);
+    //     return this.getOk();
+    // }
 
-    async createOrder(products, userId, userName) {
-        const notFoundProducts = [];
-        for (let i = 0; i< products.length; i++) {
-            const {rows} = await pool.query('SELECT id FROM products WHERE id = $1 ;',[products[i].id]);
-            if (rows.length === 0) notFoundProducts.push(products[i].id);
-        }
-        if (notFoundProducts.length > 0) return this.getError(notFoundProducts, 'Products are not found');
-
-        const {rows} = await pool.query(`INSERT INTO orders (user_id) VALUES ($1) RETURNING *;`, [userId]);
-        const orderId = rows[0].id;
-        for (let i = 0; i< products.length; i++) {
-            let el = products[i];
-            const {rows} = await pool.query(`INSERT INTO order_items (order_id, product_id, count) VALUES ($1, $2, $3);`,
-                [orderId, el.id, el.count]);
-        }
-        await pool.query(`UPDATE orders SET total_price = ( SELECT SUM(price) FROM order_items
-         JOIN products ON order_items.product_id = products.id WHERE order_id = $1) WHERE id = $1;`, [orderId])
-        await nodeMailer.sendMail('ghjk');
+    async addOrder(products, user) {
+        try {
+            const res = await this.createUser(user);
+            if (res.status === 'error') return res;
+            //const userId = res.data[0].id;
+            const userInfo = res.data[0];
+            console.log(userInfo);
+            //const {id, name, phone, email} = res.data[0];
+            //console.log(id, name, phone, email);
+            const availability = await this.checkAvailableProducts(products);
+            if (availability.status === 'error') return availability;
+            const {data} = await this.insertItems(products, userInfo.id);
+            const orderInfo = data;
+            console.log(orderInfo);
+            await nodeMailer.sendMail(userInfo,orderInfo);
+        } catch (er) {console.log('Some error in db:', er)};
+        // catch (e) {console.log('Some error in db', e)}
+        // try {await nodeMailer.sendMail({},[]);}
+        // catch (e) {console.log(e)}
         return this.getOk();
     }
 
-    sendMail(){
-
+    async checkAvailableProducts(products) {
+        const notFoundProducts = [];
+        const notEnoughProducts = []
+        for (let i = 0; i < products.length; i++) {
+            const {rows} = await pool.query('SELECT id, amount FROM products WHERE id = $1 ;', [products[i].id]);
+            if (rows.length <= 0) notFoundProducts.push(products[i].id)
+            else if (rows[0].amount < products[i].count) notEnoughProducts.push(products[i]);
+        }
+        if (notFoundProducts.length > 0) return this.getError(notFoundProducts, 'Products are not found');
+        if (notEnoughProducts.length > 0) return this.getError(notEnoughProducts, 'Not enough products');
+        return this.getOk();
     }
-    // async addOrder(products, user) {
-    //     const res = await this.createUser(user);
-    //     if (res.data.length === 0) return res;
-    //     const userId = res.data[0].id;
-    //
-    // }
+
+    async insertItems(products, userId) {
+        const res = await pool.query(`INSERT INTO orders (user_id) VALUES ($1) RETURNING *;`, [userId]);
+        const orderId = res.rows[0].id;
+        const values = products.map(el => `(${orderId},${el.id}, ${el.count})`).join(',');
+        //console.log(values)
+        await pool.query(`INSERT INTO order_items (order_id, product_id, count) VALUES ${values};`)
+        await pool.query(`UPDATE orders SET total_price = ( SELECT SUM(price*count) FROM order_items
+        JOIN products ON order_items.product_id = products.id WHERE order_id = $1) WHERE id = $1 RETURNING *;`, [orderId]);
+        const {rows} = await pool.query(`SELECT *, count*price AS price_for_item FROM order_items 
+        JOIN products ON order_items.product_id = products.id JOIN orders ON order_items.order_id = orders.id WHERE order_id = $1;`, [orderId]);
+        console.log(rows);
+        return this.getOk(rows);
+    }
 
     // async checkProducts(products) {
     //     const availableProducts = [];

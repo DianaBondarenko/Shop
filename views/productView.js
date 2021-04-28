@@ -1,6 +1,6 @@
 class ProductView {
     send(response, result) {
-        response.send(result);
+        response.json(result);
     }
 }
 

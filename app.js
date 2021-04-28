@@ -2,7 +2,6 @@ const express = require('express');
 const productRouter = require('./routes/productRouter.js');
 const orderRouter = require('./routes/orderRouter.js');
 const pool = require('./models/pool.js');
-const nodeMailer = require('./models/nodemailer');
 
 const app = express();
 app.use(express.json());
@@ -11,17 +10,6 @@ const PORT = 3000;
 
 app.use('/products', productRouter);
 app.use('/order', orderRouter);
-// app.use('/mail', (req, res) => {
-//     console.log('mailing');
-//     try {
-//         nodeMailer.sendMail(res,{})
-//     }
-//     catch (e) {
-//         console.log(e)
-//     }
-//     console.log('sent');
-//     //res.send('sent');
-// });
 app.use((req, res)  => {
     res.status(404).send('Not Found');
 });
