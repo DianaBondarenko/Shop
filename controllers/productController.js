@@ -1,65 +1,47 @@
 const productModel = require('../models/productModel.js');
+const productView = require('../views/productView.js');
 
 class ProductController {
     async getAllProducts(req, res) {
         const products = await productModel.getAllProducts();
-        res.send(products);
+        productView.send(res, products);
     }
-    ///??
+
     async searchProducts(req, res) {
-        const {name, categories, manufacture} = req.query;
-        let i = 2;
+        const {name, manufacture, categories} = req.query;
+        console.log(name, manufacture, categories);
         let products = {};
-        switch (i) {
-            case 1:
-                console.log('getNameManCategories');
-                products = await productModel.findByNameManufactureInCategory(name,manufacture,categories);
-                break;
-            case 2:
-                console.log('getNameMan');
-                products = await productModel.findByNameManufacture(name,manufacture);
-                break;
-            case 3:
-                console.log('getByCategories');
-                products = await productModel.findByCategory(categories);
-                break;
+        if ((name||manufacture)&categories) {
+            products = await productModel.findByNameManufactureInCategory(name,manufacture,categories);
         }
-        //
+        else if (name||manufacture) {
+            products = await productModel.findByNameManufacture(name,manufacture);
+        }
+        else if (categories) {
+            products = await productModel.findByCategory(categories);
+        }
+
         // switch (true) {
-        //     case name&manufacture&categories :
-        //         console.log('getCategories');
+        //     case (name!=undefined||manufacture!=undefined&categories!=undefined)==true:
+        //         console.log('getNameManCategories');
         //         products = await productModel.findByNameManufactureInCategory(name,manufacture,categories);
         //         break;
-        //     case categories :
-        //         console.log('getCategories');
+        //     case name!=undefined||manufacture!=undefined:
+        //         console.log('getNameMan');
+        //         products = await productModel.findByNameManufacture(name,manufacture);
+        //         break;
+        //     case categories!=undefined:
+        //         console.log('getByCategories');
         //         products = await productModel.findByCategory(categories);
         //         break;
         // }
 
-        //const products = await productsRepo.findByCategory(categories);
-        //const products = await productModel.findByName(name);
-        //const products = await productModel.findByManufacture(manufacture);
-        //const products = await productModel.findByNameInCategory(name,categories);
-        //const products = await productModel.findByManufactureInCategory(manufacture,categories);
-        //const products = await productModel.findByNameManufacture(name,manufacture);
-
-        //const products = await productModel.findByNameManufactureInCategory(name,manufacture,categories);
-        if (products) {
-            res.send(products);
-        } else {
-            res.status(404);
-        }
+        productView.send(res, products);
     }
     async getProductDetails(req, res) {
         const {id} = req.params;
-        console.log(id);
         const product = await productModel.getProductDetails(id);
-        if (product) {
-            res.send(product);
-        } else {
-            res.status(404);
-        }
-        //res.send('Detailed information about product');
+        productView.send(res,product);
     }
 }
 

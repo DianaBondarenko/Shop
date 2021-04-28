@@ -1,15 +1,7 @@
 class OrderView {
-    okObj = {
-       status: 'ok',
-       data: [],
-       message: ''
-    }
-    erObj = {
-        status: 'error',
-        data: [],
-        message: ''
-    }
-    send(res, obj) {
-        res.send(obj);
+    send(response, result) {
+        response.send(result);
     }
 }
+
+module.exports = new OrderView();

@@ -1,15 +1,14 @@
 const orderModel = require('../models/orderModel.js');
+const orderView = require('../views/orderView.js');
 
 class OrderController {
     async createOrder(req, res) {
         const {products, user} = req.body;
-        const userId = await orderModel.createUser(user);
+        const {data} = await orderModel.createUser(user);
+        const userId = data[0].id;
         const order = await orderModel.createOrder(products,userId);
-        res.send(''+userId);
-        //res.send(order);
-
-        //console.log(products, user);
-        //res.send('Create order');
+        orderView.send(res, order);
+        //orderView.send(res, '' + userId);
     }
 }
 
