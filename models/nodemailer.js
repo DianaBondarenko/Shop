@@ -1,7 +1,8 @@
-const nodemailer = require('nodemailer')
+const nodemailer = require('nodemailer');
+const options = require('../optionsEmail.js');
 
 class Nodemailer {
-    setHtml(user, order) {
+    getHtml(user, order) {
         let orderInfo = order.map(el => `<tr><td>${el.order_id}</td><td>${el.product_id}</td><td>${el.name}</td>
             <td>${el.price}</td><td>${el.count}</td><td>${el.price_for_item}</td><td>${el.created_at}</td></tr>`).join(' ')
         const html =
@@ -39,16 +40,16 @@ class Nodemailer {
         let transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-                user: 'ivanrumun759@gmail.com',
-                pass: '12ivan34',
+                user: options.user,
+                pass: options.password,
             }
         });
         let mailOptions = {
-            from: 'ivanrumun759@gmail.com',
-            to: 'dianabondarenko17@gmail.com',
+            from: options.user,
+            to: options.recipient,
             subject: 'Order from shop',
             text: 'Order info: ',
-            html: this.setHtml(user, order)
+            html: this.getHtml(user, order)
         }
 
         transporter.sendMail(mailOptions, (err, data) => {

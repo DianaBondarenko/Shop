@@ -4,3 +4,4 @@ package-lock.json
 node_modules
 test.http
 optionsDB.js
+optionsEmail.js
