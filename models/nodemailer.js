@@ -59,36 +59,7 @@ class Nodemailer {
                 console.log('Success')
             }
         })
-
     }
 }
 
-//${total_price}
 module.exports = new Nodemailer();
-
-
-//`<p>User info: </p>
-//          <table border="1" cellspacing="1" cellpadding="0">
-//             <tr>
-//                 <td>Name</td>
-//                 <td>Phone</td>
-//                 <td>Email</td>
-//             </tr>
-//             <tr>
-//                 <td>Name</td>
-//                 <td>Phone</td>
-//                 <td>Email</td>
-//             </tr>
-//          </table>
-//          <p>Order info: </p>
-//          <table border="1" cellspacing="1" cellpadding="0">
-//             <tr>
-//             <td>Oder_id</td>
-//             <td>Product_id</td>
-//             <td>Name</td>
-//             <td>Amount</td>
-//             <td>Price</td>
-//             <td>Order_time</td>
-//             </tr>
-//         </table>
-//         <p>Total price : 500</p>`

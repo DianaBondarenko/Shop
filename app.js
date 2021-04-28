@@ -2,6 +2,7 @@ const express = require('express');
 const productRouter = require('./routes/productRouter.js');
 const orderRouter = require('./routes/orderRouter.js');
 const pool = require('./models/pool.js');
+const options = require('./optionsDB.js');
 
 const app = express();
 app.use(express.json());
@@ -14,13 +15,7 @@ app.use((req, res)  => {
     res.status(404).send('Not Found');
 });
 
-pool.connect({
-    user: 'postgres',
-    host: 'localhost',
-    database: 'shop',
-    password: 'admin',
-    port: 5432
-})
+pool.connect(options)
     .then(()=> {
         app.listen(PORT, ()=>{
             console.log(`Server has started on port ${PORT}...`)
@@ -29,9 +24,6 @@ pool.connect({
     .catch(er => {
         console.log(er);
     })
-
-
-
 
 // app.listen(PORT, () => {
 //     console.log(`Server has started on port ${PORT}...`)

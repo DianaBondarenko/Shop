@@ -13,10 +13,8 @@ class OrderController {
         //     const order = await orderModel.createOrder(products, userId);
         //     orderView.send(res, order);
         // }
-
         const order = await orderModel.addOrder(products, user);
         orderView.send(res, order);
-
     }
 }
 

@@ -6,6 +6,14 @@ class ProductModel {
         return rows.length > 0 ? this.getOk(rows) : this.getError();
     }
 
+    async getProductDetails(id) {
+        if (this.checkDetails(id)) {
+            const {rows} = await pool.query(`SELECT * FROM products_full WHERE id = $1;`, [id]);
+            return rows.length > 0 ? this.getOk(rows) : this.getError([{id: id}], 'Product is not found');
+        } else {
+            return this.getError([], 'Invalid params');
+        }
+    }
     // async findByCategory(categories) {
     //     const {rows} = await pool.query(`SELECT p.id, p.name, manufacture, category, units, price, img FROM products_full as p
     //         JOIN categories ON p.category = categories.name WHERE categories.id IN (${categories});`);
@@ -62,15 +70,6 @@ class ProductModel {
         return rows.length > 0 ? this.getOk(rows) : this.getError();
     }
 
-    async getProductDetails(id) {
-        if (this.checkDetails(id)) {
-            const {rows} = await pool.query(`SELECT * FROM products_full WHERE id = $1;`, [id]);
-            return rows.length > 0 ? this.getOk(rows) : this.getError([{id: id}], 'Product is not found');
-        } else {
-            return this.getError([], 'Invalid params');
-        }
-    }
-
     checkSearchParams(name, manufacture, categories) {
         if (name) {
             if (!(typeof name === 'string' && name.match(/[a-z]{1,100}/i))) return false;
@@ -83,7 +82,6 @@ class ProductModel {
         }
         return true;
     }
-
     checkDetails(id) {
         return Number.isInteger(Number(id));
     }
@@ -95,7 +93,6 @@ class ProductModel {
             message: message
         }
     }
-
     getOk(data) {
         return {
             status: 'ok',
