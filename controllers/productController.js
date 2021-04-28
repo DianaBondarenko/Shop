@@ -10,16 +10,17 @@ class ProductController {
     async searchProducts(req, res) {
         const {name, manufacture, categories} = req.query;
         console.log(name, manufacture, categories);
-        let products = {};
-        if ((name||manufacture)&categories) {
-            products = await productModel.findByNameManufactureInCategory(name,manufacture,categories);
-        }
-        else if (name||manufacture) {
-            products = await productModel.findByNameManufacture(name,manufacture);
-        }
-        else if (categories) {
-            products = await productModel.findByCategory(categories);
-        }
+        const products = await productModel.search(name,manufacture,categories);
+        // let products = {};
+        // if ((name||manufacture)&categories) {
+        //     products = await productModel.findByNameManufactureInCategory(name,manufacture,categories);
+        // }
+        // else if (name||manufacture) {
+        //     products = await productModel.findByNameManufacture(name,manufacture);
+        // }
+        // else if (categories) {
+        //     products = await productModel.findByCategory(categories);
+        // }
 
         // switch (true) {
         //     case (name!=undefined||manufacture!=undefined&categories!=undefined)==true:

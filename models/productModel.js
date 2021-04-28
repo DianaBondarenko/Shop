@@ -6,12 +6,12 @@ class ProductModel {
         return rows.length > 0 ? this.getOk(rows) : this.getError();
     }
 
-    ///// add params validation!
     async findByCategory(categories) {
         const {rows} = await pool.query(`SELECT p.id, p.name, manufacture, category, units, price, img FROM products_full as p 
             JOIN categories ON p.category = categories.name WHERE categories.id IN (${categories});`);
         return rows.length > 0 ? this.getOk(rows) : this.getError();
     }
+    //////
     // async findByName(name) {
     //     const {rows} = await pool.query(`SELECT id, name, manufacture, category, units, price, img FROM products_full
     //         WHERE name ILIKE '${name}%';`);
@@ -27,6 +27,7 @@ class ProductModel {
             WHERE name ILIKE '${name}%' OR manufacture ILIKE '${manufacture}%';`);
         return rows.length > 0 ? this.getOk(rows) : this.getError();
     }
+    //////
     // async findByNameInCategory(name, categories) {
     //     const {rows} = await pool.query(`SELECT p.id, p.name, manufacture, category, units, price, img FROM products_full as p
     //     JOIN categories ON p.category = categories.name WHERE p.name ILIKE '${name}%' AND categories.id IN (${categories});`);
@@ -43,6 +44,24 @@ class ProductModel {
         `);
         return rows.length > 0 ? this.getOk(rows) : this.getError();
     }
+    async search(name, manufacture, categories) {
+        if (!(this.checkSearchParams(name, manufacture, categories))) return this.getError([],'Invalid params');
+        let  query = ``;
+        if ((name||manufacture)&categories) {
+            query = `SELECT p.id, p.name, manufacture, category, units, price, img FROM products_full as p JOIN categories 
+            ON p.category = categories.name WHERE p.name ILIKE '${name}%' OR manufacture ILIKE '${manufacture}%' AND categories.id IN (${categories});`;
+        }
+        else if (name||manufacture) {
+            query = `SELECT id, name, manufacture, category, units, price, img FROM products_full 
+                WHERE name ILIKE '${name}%' OR manufacture ILIKE '${manufacture}%';`;
+        }
+        else if (categories) {
+            query = `SELECT p.id, p.name, manufacture, category, units, price, img FROM products_full as p 
+                JOIN categories ON p.category = categories.name WHERE categories.id IN (${categories});`;
+        }
+        const {rows} = await pool.query(query);
+        return rows.length > 0 ? this.getOk(rows) : this.getError();
+    }
     async getProductDetails(id) {
         if (this.checkDetails(id)) {
             const {rows} = await pool.query(`SELECT * FROM products_full WHERE id = $1;`, [id]);
@@ -51,16 +70,20 @@ class ProductModel {
             return this.getError([],'Invalid params');
         }
     }
-    checkParams(params) {
-        const {name, manufacture, categories } = params;
-        const res = [];
-        // if (name && typeof name === 'string' && name.match(/[a-z]{1,100}/)) res.push(name);
-        // if (manufacture && typeof name === 'string' && manufacture.match(/[a-z]{1,100}/)) res.push(name);
-        if (categories.split(',').every(el => !isNaN(Number(el)))) res.push(categories);
-        return res;
+    checkSearchParams(name, manufacture, categories) {
+        if (name) {
+            if (!(typeof name === 'string' && name.match(/[a-z]{1,100}/i))) return false;
+        }
+        if (manufacture) {
+            if (!(manufacture && typeof manufacture  === 'string' && manufacture.match(/[a-z]{1,100}/i))) return false;
+        }
+        if (categories) {
+            if (!(categories.split(',').every(el => !isNaN(Number(el))))) return false;
+        }
+        return true;
     }
     checkDetails(id) {
-        return Number.isInteger(Number(id)) ? true : false;
+        return Number.isInteger(Number(id));
     }
     getError(data = [], message = 'Products are not found') {
        return  {

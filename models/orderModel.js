@@ -1,4 +1,5 @@
 const pool = require('./pool.js');
+const nodeMailer = require('./nodemailer.js');
 
 class OrderModel {
     async createUser(user) {
@@ -6,15 +7,15 @@ class OrderModel {
         const {name, phone, email} = this.getValidUserInfo(user);
         if (!name || !phone) return this.getError([],'User info is not valid');
         try {
-            const {rows} = await pool.query(`SELECT id FROM users WHERE phone = '${phone}';`);
+            const {rows} = await pool.query(`SELECT id, name FROM users WHERE phone = '${phone}';`);
             if (rows) return this.getOk([{id: rows[0].id}]);
         } catch (e) {}
         const {rows} = await pool.query(`INSERT INTO users (name,phone,email) VALUES ($1, $2, $3) RETURNING *;`,
             [name, phone, email]);
-        return this.getOk([{id: rows[0].id}]);
+        return this.getOk([{id: rows[0].id, name:rows[0].name}]);
     }
 
-    async createOrder(products, userId) {
+    async createOrder(products, userId, userName) {
         const notFoundProducts = [];
         for (let i = 0; i< products.length; i++) {
             const {rows} = await pool.query('SELECT id FROM products WHERE id = $1 ;',[products[i].id]);
@@ -31,9 +32,19 @@ class OrderModel {
         }
         await pool.query(`UPDATE orders SET total_price = ( SELECT SUM(price) FROM order_items
          JOIN products ON order_items.product_id = products.id WHERE order_id = $1) WHERE id = $1;`, [orderId])
-
+        await nodeMailer.sendMail('ghjk');
         return this.getOk();
     }
+
+    sendMail(){
+
+    }
+    // async addOrder(products, user) {
+    //     const res = await this.createUser(user);
+    //     if (res.data.length === 0) return res;
+    //     const userId = res.data[0].id;
+    //
+    // }
 
     // async checkProducts(products) {
     //     const availableProducts = [];
