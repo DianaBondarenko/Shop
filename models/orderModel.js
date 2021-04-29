@@ -28,6 +28,8 @@ class OrderModel {
             const res = await this.createUser(user);
             if (res.status === 'error') return res;
             const userInfo = res.data[0];
+            const valid = this.validateProducts(products)
+            if(valid.status === 'error') return valid;
             const availability = await this.checkAvailableProducts(products);
             if (availability.status === 'error') return availability;
             const {data} = await this.insertItems(products, userInfo.id);
@@ -97,13 +99,21 @@ class OrderModel {
     // }
     getValidUserInfo(user) {
         const res = {};
-        if (!user) return res;
+        if (!user||! user instanceof Object) return res;
         const {name, phone, email} = user;
         if (name && name.match(/^[a-z]{2,60}$/i)) res.name = name;
         if (phone && phone.match(/^[0-9]{10,12}$/)) res.phone = phone;
         const regEmail = /^[A-Za-z0-9]+[A-Za-z0-9_\-\.!#\$%&'\*\+-\/=`{\|}~\?\^]*[A-Za-z0-9]+@[a-z0-9-]{2,}\.[a-z]{2,4}$/
         if (email && email.length <= 60 && email.match(regEmail)) res.email = email;
         return res;
+    }
+    validateProducts(products) {
+        const res = this.getError([], 'Not valid params');
+        if (!products||! Array.isArray(products)) return res;
+        if (products.find(el => !el instanceof Object || !el.id  || isNaN(Number(el.id))|| !el.count ||isNaN(Number(el.count)))) {
+            return res;
+        }
+        return this.getOk();
     }
 
     getError(data = [], message) {

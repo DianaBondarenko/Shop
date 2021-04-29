@@ -14,6 +14,7 @@ class ProductModel {
             return this.getError([], 'Invalid params');
         }
     }
+    /////
     // async findByCategory(categories) {
     //     const {rows} = await pool.query(`SELECT p.id, p.name, manufacture, category, units, price, img FROM products_full as p
     //         JOIN categories ON p.category = categories.name WHERE categories.id IN (${categories});`);
