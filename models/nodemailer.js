@@ -9,9 +9,9 @@ class Nodemailer {
             `<h2>User info: </h2>
              <table border="1" cellspacing="0" cellpadding="0">
                 <tr>
-                    <th>Name</th>
-                    <th>Phone</th>
-                    <th>Email</th>
+                    <th> Name </th>
+                    <th> Phone </th>
+                    <th> Email </th>
             </tr>
             <tr>
                 <td>${user.name}</td>

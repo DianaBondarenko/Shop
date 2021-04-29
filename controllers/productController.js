@@ -9,7 +9,6 @@ class ProductController {
 
     async searchProducts(req, res) {
         const {name, manufacture, categories} = req.query;
-        console.log(name, manufacture, categories);
         const products = await productModel.search(name,manufacture,categories);
         /////
         // let products = {};

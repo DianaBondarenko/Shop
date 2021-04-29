@@ -33,7 +33,10 @@ class OrderModel {
             const {data} = await this.insertItems(products, userInfo.id);
             const orderInfo = data;
             await nodeMailer.sendMail(userInfo, orderInfo);
-        } catch (er) {console.log('Some error in db:', er)}
+        } catch (er) {
+            return this.getError([],er.message) ;
+            console.log('Some error in db:', er)
+        }
         return this.getOk();
     }
 
@@ -54,7 +57,7 @@ class OrderModel {
         const notEnoughProducts = []
         for (let i = 0; i < products.length; i++) {
             const {rows} = await pool.query('SELECT id, amount FROM products WHERE id = $1;', [products[i].id]);
-            if (rows.length <= 0) notFoundProducts.push(products[i].id)
+            if (rows.length <= 0) notFoundProducts.push({id: products[i].id})
             else if (rows[0].amount < products[i].count) notEnoughProducts.push(products[i]);
         }
         if (notFoundProducts.length > 0) return this.getError(notFoundProducts, 'Products are not found');
@@ -93,13 +96,14 @@ class OrderModel {
     //     }
     // }
     getValidUserInfo(user) {
+        const res = {};
+        if (!user) return res;
         const {name, phone, email} = user;
-        const res2 = {};
-        if (name && name.match(/^[a-z]{2,60}$/i)) res2.name = name;
-        if (phone && phone.match(/^[0-9]{10,12}$/)) res2.phone = phone;
+        if (name && name.match(/^[a-z]{2,60}$/i)) res.name = name;
+        if (phone && phone.match(/^[0-9]{10,12}$/)) res.phone = phone;
         const regEmail = /^[A-Za-z0-9]+[A-Za-z0-9_\-\.!#\$%&'\*\+-\/=`{\|}~\?\^]*[A-Za-z0-9]+@[a-z0-9-]{2,}\.[a-z]{2,4}$/
-        if (email && email.length <= 60 && email.match(regEmail)) res2.email = email;
-        return res2;
+        if (email && email.length <= 60 && email.match(regEmail)) res.email = email;
+        return res;
     }
 
     getError(data = [], message) {
