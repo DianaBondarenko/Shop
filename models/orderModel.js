@@ -1,5 +1,7 @@
 const pool = require('./pool.js');
 const nodeMailer = require('./nodemailer.js');
+const Unauthorized = require('../common/errors/unauthorized.js');
+const NotFound = require('../common/errors/notFound.js');
 
 class OrderModel {
     /////
@@ -23,23 +25,38 @@ class OrderModel {
     //     //await nodeMailer.sendMail(user, products);
     //     return this.getOk();
     // }
+    // async addOrder(products, user) {
+    //     try {
+    //         const res = await this.createUser(user);
+    //         if (res.status === 'error') return res;
+    //         const userInfo = res.data[0];
+    //         const valid = this.validateProducts(products)
+    //         if(valid.status === 'error') return valid;
+    //         const availability = await this.checkAvailableProducts(products);
+    //         if (availability.status === 'error') return availability;
+    //         const {data} = await this.insertItems(products, userInfo.id);
+    //         const orderInfo = data;
+    //         await nodeMailer.sendMail(userInfo, orderInfo);
+    //     } catch (er) {
+    //         return this.getError([],er.message) ;
+    //         console.log('Some error in db:', er)
+    //     }
+    //     return this.getOk();
+    // }
     async addOrder(products, user) {
         try {
-            const res = await this.createUser(user);
-            if (res.status === 'error') return res;
-            const userInfo = res.data[0];
-            const valid = this.validateProducts(products)
-            if(valid.status === 'error') return valid;
+            if (user.isAuthenticated === 'false') return new Unauthorized('User is unauthorized');
             const availability = await this.checkAvailableProducts(products);
-            if (availability.status === 'error') return availability;
-            const {data} = await this.insertItems(products, userInfo.id);
-            const orderInfo = data;
-            await nodeMailer.sendMail(userInfo, orderInfo);
-        } catch (er) {
-            return this.getError([],er.message) ;
-            console.log('Some error in db:', er)
-        }
-        return this.getOk();
+            if (availability.success === 'false') return availability;
+            const {data} = await this.insertItems(products, user.id);
+            await nodeMailer.sendMail(user, data);
+        } catch (er) {return er}
+        return this.getSuccess();
+    }
+
+    async getUser(phone) {
+        const {rows} = await pool.query(`SELECT * FROM users WHERE phone= '${phone}';`)
+        return rows[0];
     }
 
     async createUser(user) {
@@ -62,9 +79,9 @@ class OrderModel {
             if (rows.length <= 0) notFoundProducts.push({id: products[i].id})
             else if (rows[0].amount < products[i].count) notEnoughProducts.push(products[i]);
         }
-        if (notFoundProducts.length > 0) return this.getError(notFoundProducts, 'Products are not found');
-        if (notEnoughProducts.length > 0) return this.getError(notEnoughProducts, 'Not enough products');
-        return this.getOk();
+        if (notFoundProducts.length > 0) return new NotFound('Products are not found');
+        if (notEnoughProducts.length > 0) return new NotFound('Not enough products');
+        return this.getSuccess();
     }
 
     async insertItems(products, userId) {
@@ -76,7 +93,7 @@ class OrderModel {
         JOIN products ON order_items.product_id = products.id WHERE order_id = $1) WHERE id = $1;`, [orderId]);
         const {rows} = await pool.query(`SELECT *, count*price AS price_for_item FROM order_items 
         JOIN products ON order_items.product_id = products.id JOIN orders ON order_items.order_id = orders.id WHERE order_id = $1;`, [orderId]);
-        return this.getOk(rows);
+        return this.getSuccess(rows);
     }
 
     //////
@@ -97,24 +114,25 @@ class OrderModel {
     //         this.getError(notFound, 'Products are not found');
     //     }
     // }
-    getValidUserInfo(user) {
-        const res = {};
-        if (!user||! user instanceof Object) return res;
-        const {name, phone, email} = user;
-        if (name && name.match(/^[a-z]{2,60}$/i)) res.name = name;
-        if (phone && phone.match(/^[0-9]{10,12}$/)) res.phone = phone;
-        const regEmail = /^[A-Za-z0-9]+[A-Za-z0-9_\-\.!#\$%&'\*\+-\/=`{\|}~\?\^]*[A-Za-z0-9]+@[a-z0-9-]{2,}\.[a-z]{2,4}$/
-        if (email && email.length <= 60 && email.match(regEmail)) res.email = email;
-        return res;
-    }
-    validateProducts(products) {
-        const res = this.getError([], 'Not valid params');
-        if (!products||! Array.isArray(products)) return res;
-        if (products.find(el => !el instanceof Object || !el.id  || isNaN(Number(el.id))|| !el.count ||isNaN(Number(el.count)))) {
-            return res;
-        }
-        return this.getOk();
-    }
+
+    // getValidUserInfo(user) {
+    //     const res = {};
+    //     if (!user||! user instanceof Object) return res;
+    //     const {name, phone, email} = user;
+    //     if (name && name.match(/^[a-z]{2,60}$/i)) res.name = name;
+    //     if (phone && phone.match(/^[0-9]{10,12}$/)) res.phone = phone;
+    //     const regEmail = /^[A-Za-z0-9]+[A-Za-z0-9_\-\.!#\$%&'\*\+-\/=`{\|}~\?\^]*[A-Za-z0-9]+@[a-z0-9-]{2,}\.[a-z]{2,4}$/
+    //     if (email && email.length <= 60 && email.match(regEmail)) res.email = email;
+    //     return res;
+    // }
+    // validateProducts(products) {
+    //     const res = this.getError([], 'Not valid products info');
+    //     if (!products||! Array.isArray(products)) return res;
+    //     if (products.find(el => !el instanceof Object || !el.id  || isNaN(Number(el.id))|| !el.count ||isNaN(Number(el.count)))) {
+    //         return res;
+    //     }
+    //     return this.getOk();
+    // }
 
     getError(data = [], message) {
         return {
@@ -123,9 +141,16 @@ class OrderModel {
             message: message
         }
     }
-    getOk(data = []) {
+    // getOk(data = []) {
+    //     return {
+    //         status: 'ok',
+    //         data: data,
+    //         message: ''
+    //     }
+    // }
+    getSuccess(data = []) {
         return {
-            status: 'ok',
+            success: 'true',
             data: data,
             message: ''
         }
