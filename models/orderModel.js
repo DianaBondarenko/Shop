@@ -50,7 +50,7 @@ class OrderModel {
             if (availability.success === 'false') return availability;
             const {data} = await this.insertItems(products, user.id);
             await nodeMailer.sendMail(user, data);
-        } catch (er) {return er}
+        } catch (er) {throw er}
         return this.getSuccess();
     }
 
@@ -79,8 +79,8 @@ class OrderModel {
             if (rows.length <= 0) notFoundProducts.push({id: products[i].id})
             else if (rows[0].amount < products[i].count) notEnoughProducts.push(products[i]);
         }
-        if (notFoundProducts.length > 0) return new NotFound('Products are not found');
-        if (notEnoughProducts.length > 0) return new NotFound('Not enough products');
+        if (notFoundProducts.length > 0) throw new NotFound('Products are not found');
+        if (notEnoughProducts.length > 0) throw new NotFound('Not enough products');
         return this.getSuccess();
     }
 
@@ -151,8 +151,7 @@ class OrderModel {
     getSuccess(data = []) {
         return {
             success: 'true',
-            data: data,
-            message: ''
+            data: data
         }
     }
     /////
