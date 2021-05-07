@@ -1,4 +1,3 @@
-const pool = require('../../models/pool.js');
 const orderModel = require('../../models/orderModel.js');
 const NotFound = require('../errors/notFound.js');
 const Forbidden = require('../errors/forbidden.js');
