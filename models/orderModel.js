@@ -2,6 +2,7 @@ const pool = require('./pool.js');
 const nodeMailer = require('./nodemailer.js');
 const Unauthorized = require('../common/errors/unauthorized.js');
 const NotFound = require('../common/errors/notFound.js');
+const user = require('./userMod.js');
 
 class OrderModel {
     /////
@@ -53,11 +54,18 @@ class OrderModel {
         } catch (er) {throw er}
         return this.getSuccess();
     }
-
-    async getUser(phone) {
-        const {rows} = await pool.query(`SELECT * FROM users WHERE phone= '${phone}';`)
-        return rows[0];
+    async getUsers() {
+        const users = await user.findAll();
+        return users;
     }
+    async getUser(phone) {
+        const users = await user.findAll({where: {phone: phone}});
+        return users[0];
+    }
+    // async getUser(phone) {
+    //     const {rows} = await pool.query(`SELECT * FROM users WHERE phone= '${phone}';`)
+    //     return rows[0];
+    // }
 
     async createUser(user) {
         const {name, phone, email} = this.getValidUserInfo(user);
@@ -154,16 +162,6 @@ class OrderModel {
             data: data
         }
     }
-    /////
-    // checkUserInfo(name, phone, email) {
-    //     let res = false;
-    //     let res2 = {}
-    //     if (name && name.match(/^[a-z]{2,60}$/i)) res = true;
-    //     if (phone && phone.match(/^[0-9]{10,12}$/)) res = true;
-    //     const regEmail = /^[A-Za-z0-9]+[A-Za-z0-9_\-\.!#\$%&'\*\+-\/=`{\|}~\?\^]*[A-Za-z0-9]+@[a-z0-9-]{2,}\.[a-z]{2,4}$/
-    //     if (email && email.length <= 60 && email.match(regEmail)) res = true;
-    //     return res;
-    // }
 }
 
 module.exports = new OrderModel();

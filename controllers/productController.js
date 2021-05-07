@@ -1,13 +1,14 @@
 const productModel = require('../models/productModel.js');
 const productView = require('../views/productView.js');
+const asyncHandler = require("../common/middleware/asyncHandler");
 
 class ProductController {
-    async getAllProducts(req, res) {
+    getAllProducts = asyncHandler(async (req, res) => {
         const products = await productModel.getAllProducts();
         productView.send(res, products);
-    }
+    })
 
-    async searchProducts(req, res) {
+    searchProducts = asyncHandler(async (req, res) => {
         const {name, manufacture, categories} = req.query;
         const products = await productModel.search(name,manufacture,categories);
         /////
@@ -36,12 +37,13 @@ class ProductController {
         //         break;
         // }
         productView.send(res, products);
-    }
-    async getProductDetails(req, res) {
+    })
+
+    getProductDetails = asyncHandler(async (req, res) => {
         const {id} = req.params;
         const product = await productModel.getProductDetails(id);
         productView.send(res,product);
-    }
+    })
 }
 
 module.exports = new ProductController();

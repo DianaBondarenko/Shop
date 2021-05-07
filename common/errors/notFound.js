@@ -1,8 +1,9 @@
 const BaseHttpError = require('./baseHttpError.js');
 
 class NotFound extends BaseHttpError {
-    constructor(message) {
+    constructor(message, data = []) {
         super(404, message);
+        this.data = data;
     }
 }
 

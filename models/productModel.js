@@ -1,18 +1,21 @@
 const pool = require('./pool.js');
+const NotFound = require('../common/errors/notFound.js');
+const product = require('./productMod.js');
 
 class ProductModel {
     async getAllProducts() {
-        const {rows} = await pool.query('SELECT id, name, manufacture, category, units, price, img FROM products_full;');
-        return rows.length > 0 ? this.getOk(rows) : this.getError();
+        const products = await product.findAll();
+        return this.getSuccess(products);
     }
+    // async getAllProducts() {
+    //     const {rows} = await pool.query('SELECT id, name, manufacture, category, units, price, img FROM products_full;');
+    //     return rows.length > 0 ? this.getOk(rows) : this.getError();
+    // }
 
     async getProductDetails(id) {
-        if (this.checkDetails(id)) {
-            const {rows} = await pool.query(`SELECT * FROM products_full WHERE id = $1;`, [id]);
-            return rows.length > 0 ? this.getOk(rows) : this.getError([{id: id}], 'Product is not found');
-        } else {
-            return this.getError([], 'Invalid params');
-        }
+        const products = await product.findAll({where: {id: id}});
+        if (products.length > 0) return this.getSuccess(products);
+        throw new NotFound('Product is not found', [{id: id}]);
     }
     /////
     // async findByCategory(categories) {
@@ -55,7 +58,6 @@ class ProductModel {
     // }
 
     async search(name, manufacture, categories) {
-        if (!(this.checkSearchParams(name, manufacture, categories))) return this.getError([], 'Invalid params');
         let query = ``;
         if ((name || manufacture) & categories) {
             query = `SELECT p.id, p.name, manufacture, category, units, price, img FROM products_full as p JOIN categories 
@@ -71,20 +73,11 @@ class ProductModel {
         return rows.length > 0 ? this.getOk(rows) : this.getError();
     }
 
-    checkSearchParams(name, manufacture, categories) {
-        if (name) {
-            if (!(typeof name === 'string' && name.match(/[a-z]{1,100}/i))) return false;
+    getSuccess(data = []) {
+        return {
+            success: 'true',
+            data: data
         }
-        if (manufacture) {
-            if (!(manufacture && typeof manufacture === 'string' && manufacture.match(/[a-z]{1,100}/i))) return false;
-        }
-        if (categories) {
-            if (!(categories.split(',').every(el => !isNaN(Number(el))))) return false;
-        }
-        return true;
-    }
-    checkDetails(id) {
-        return Number.isInteger(Number(id));
     }
 
     getError(data = [], message = 'Products are not found') {
