@@ -6,6 +6,7 @@ const User = require('../models/userModel.js');
 const Product = require('../models/productModel.js');
 const Order = require('../models/orderModel.js');
 const OrderItem = require('../models/orderItemModel.js');
+const {Sequelize} = require("sequelize");
 
 class OrderService {
     async addOrder(products, user) {
@@ -45,20 +46,37 @@ class OrderService {
         const orderId = orderInfo.id;
         const values = products.reduce((res,el) => [...res,{order_id: orderId, product_id:el.id, count:el.count}],[]);
         await OrderItem.bulkCreate(values);
-        await pool.query(`UPDATE orders SET total_price = ( SELECT SUM(price*count) FROM order_items 
-        JOIN products ON order_items.product_id = products.id WHERE order_id = $1) WHERE id = $1;`, [orderId]);
+        const total_price = await OrderItem.findAll(
+            {
+                attributes: [[ Sequelize.literal('SUM(order_item.count*product.price)') ,'total_price']],
+                include: {model:Product,required: true, attributes: []},
+                group: 'order_id',
+                where: {order_id:orderId}
+            }
+        )
+        console.log(total_price);
+        await Order.upsert(
+            {total_price: total_price},
+            {where: {id:orderId}}
+        )
+        // await pool.query(`UPDATE orders SET total_price = ( SELECT SUM(price*count) FROM order_items
+        // JOIN products ON order_items.product_id = products.id WHERE order_id = $1) WHERE id = $1;`, [orderId]);
+        const order = await OrderItem.findAll(
+            {
+                attributes:['*',[Sequelize.literal('order_item.count*product.price'),'price_for_item']],
+                include: [
+                    { model: Product, as: 'product',required: true, attributes: []},
+                    { model: Order, as: 'order',required: true, attributes: []}
+                ],
+                where: {'order_id':orderId}
+            }
+        )
+        console.log(order);
         const {rows} = await pool.query(`SELECT *, count*price AS price_for_item FROM order_items 
         JOIN products ON order_items.product_id = products.id JOIN orders ON order_items.order_id = orders.id WHERE order_id = $1;`, [orderId]);
         return this.getSuccess(rows);
     }
 
-    // getOk(data = []) {
-    //     return {
-    //         status: 'ok',
-    //         data: data,
-    //         message: ''
-    //     }
-    // }
     getSuccess(data = []) {
         return {
             success: 'true',
