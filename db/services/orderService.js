@@ -46,24 +46,23 @@ class OrderService {
         const orderId = orderInfo.id;
         const values = products.reduce((res,el) => [...res,{order_id: orderId, product_id:el.id, count:el.count}],[]);
         await OrderItem.bulkCreate(values);
-        const total_price = await OrderItem.findAll(
-            {
-                attributes: [[ Sequelize.literal('SUM(order_item.count*product.price)') ,'total_price']],
+        const total = await OrderItem.findOne({
+                attributes: [[Sequelize.literal('SUM(order_item.count*product.price)') ,'total_price']],
                 include: {model:Product,required: true, attributes: []},
                 group: 'order_id',
                 where: {order_id:orderId}
             }
         )
+        const total_price = total.dataValues.total_price;
         console.log(total_price);
-        await Order.upsert(
+        await Order.update(
             {total_price: total_price},
-            {where: {id:orderId}}
-        )
-        // await pool.query(`UPDATE orders SET total_price = ( SELECT SUM(price*count) FROM order_items
-        // JOIN products ON order_items.product_id = products.id WHERE order_id = $1) WHERE id = $1;`, [orderId]);
+            {where: {id:orderId}})
         const order = await OrderItem.findAll(
             {
-                attributes:['*',[Sequelize.literal('order_item.count*product.price'),'price_for_item']],
+                attributes:{include:[[Sequelize.literal('order_item.count*product.price'),'price_for_item'],
+                        [Sequelize.literal('product.price') ,'product_price'],[Sequelize.literal('product.name') ,'product_name'],
+                        [Sequelize.literal('order.total_price') ,'total_price']]},
                 include: [
                     { model: Product, as: 'product',required: true, attributes: []},
                     { model: Order, as: 'order',required: true, attributes: []}
