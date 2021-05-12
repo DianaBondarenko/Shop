@@ -1,4 +1,4 @@
-const orderModel = require('../../models/orderModel.js');
+const orderModel = require('../../db/services/orderService.js');
 const NotFound = require('../errors/notFound.js');
 const Forbidden = require('../errors/forbidden.js');
 

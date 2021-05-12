@@ -1,5 +1,5 @@
 const nodemailer = require('nodemailer');
-const options = require('../optionsEmail.js');
+const options = require('./optionsEmail.js');
 
 class Nodemailer {
     getHtml(user, order) {
