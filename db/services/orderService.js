@@ -70,7 +70,8 @@ class OrderService {
         const order = await OrderItem.findAll({
             attributes:{include:[[Sequelize.literal('order_item.count*product.price'),'price_for_item'],
                     [Sequelize.literal('product.price') ,'product_price'],[Sequelize.literal('product.name') ,'product_name'],
-                    [Sequelize.literal('shop_order.total_price') ,'total_price']]},
+                    [Sequelize.literal('shop_order.total_price') ,'total_price'],
+                    [Sequelize.literal('shop_order.created_at') ,'created_at']]},
             include: [
                 { model: Product, as: 'product',required: true, attributes: []},
                 { model: Shop_order, as: 'shop_order',required: true, attributes: []}],
