@@ -2,11 +2,11 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 require('dotenv').config();
-const db = require('./dbSequelize.js');
+const db = require('./db/dbSequelize.js');
 const productRouter = require('./routes/productRouter.js');
 const orderRouter = require('./routes/orderRouter.js');
-const pool = require('./models/pool.js');
-const options = JSON.parse(process.env.DB_OPTIONS);  //require('./optionsDB.js');
+const pool = require('./db/pool.js');
+const options = require('./db/optionsDB.js');
 const morgan = require('morgan'); // console.log query info
 const errorHandler = require('./common/middleware/errorHandler.js');
 const NotFound = require("./common/errors/notFound.js");

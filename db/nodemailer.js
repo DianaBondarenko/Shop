@@ -1,10 +1,11 @@
 const nodemailer = require('nodemailer');
-const options = require('../optionsEmail.js');
+const options = require('./optionsEmail.js');
 
 class Nodemailer {
     getHtml(user, order) {
-        let orderInfo = order.map(el => `<tr><td>${el.order_id}</td><td>${el.product_id}</td><td>${el.name}</td>
-            <td>${el.price}</td><td>${el.count}</td><td>${el.price_for_item}</td><td>${el.created_at}</td></tr>`).join(' ')
+        let orderInfo = order.map(el=>el.dataValues).map(el => `<tr><td>${el.shop_order_id}</td><td>${el.product_id}</td><td>${el.product_name}</td>
+            <td>${el.product_price}</td><td>${el.count}</td><td>${el.price_for_item}</td><td>${el.created_at}</td></tr>`).join(' ');
+        console.log(orderInfo)
         const html =
             `<h2>User info: </h2>
              <table border="1" cellspacing="0" cellpadding="0">
@@ -32,7 +33,7 @@ class Nodemailer {
             </tr>
             ${orderInfo}
         </table>
-        <h2>Total price : ${order[0].total_price}</h2>`
+        <h2>Total price : ${order[0].dataValues.total_price}</h2>`
         return html;
     }
 

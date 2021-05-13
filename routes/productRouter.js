@@ -1,7 +1,7 @@
 const express = require('express');
 const productController = require('../controllers/productController.js');
-const searchDTO = require('../common/middleware/searchDTO.js');
-const detailsDTO = require('../common/middleware/detailsDTO.js');
+const searchDTO = require('../common/DTOs/searchDTO.js');
+const detailsDTO = require('../common/DTOs/detailsDTO.js');
 const validator = require('express-joi-validation').createValidator({});
 
 const productRouter = express.Router();

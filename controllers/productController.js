@@ -1,16 +1,16 @@
-const productModel = require('../models/productModel.js');
+const productService = require('../db/services/productService.js');
 const productView = require('../views/productView.js');
 const asyncHandler = require("../common/middleware/asyncHandler");
 
 class ProductController {
     getAllProducts = asyncHandler(async (req, res) => {
-        const products = await productModel.getAllProducts();
+        const products = await productService.getAllProducts();
         productView.send(res, products);
     })
 
     searchProducts = asyncHandler(async (req, res) => {
         const {name, manufacture, categories} = req.query;
-        const products = await productModel.search(name,manufacture,categories);
+        const products = await productService.search(name,manufacture,categories);
         /////
         // let products = {};
         // if ((name||manufacture)&categories) {
@@ -41,7 +41,7 @@ class ProductController {
 
     getProductDetails = asyncHandler(async (req, res) => {
         const {id} = req.params;
-        const product = await productModel.getProductDetails(id);
+        const product = await productService.getProductDetails(id);
         productView.send(res,product);
     })
 }
