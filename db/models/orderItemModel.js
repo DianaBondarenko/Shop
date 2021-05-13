@@ -1,6 +1,6 @@
 const Sequelize = require("sequelize");
 const db = require('../dbSequelize.js');
-const Order = require('./orderModel.js');
+const Shop_order = require('./orderModel.js');
 const Product = require('./productModel.js');
 
 const Order_item = db.define('order_item', {
@@ -9,10 +9,10 @@ const Order_item = db.define('order_item', {
         autoIncrement: true,
         primaryKey: true
     },
-    order_id: {
+    shop_order_id: {
         type: Sequelize.INTEGER,
         allowNull: false ,
-        references: { model: 'Order', key: 'id' },
+        references: { model: 'Shop_order', key: 'id' },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
     },
@@ -31,7 +31,7 @@ const Order_item = db.define('order_item', {
     underscored: true
 })
 
-Order_item.belongsTo(Order);
+Order_item.belongsTo(Shop_order);
 Order_item.belongsTo(Product);
 
 module.exports = Order_item;

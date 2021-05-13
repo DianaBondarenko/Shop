@@ -2,7 +2,7 @@ const Sequelize = require("sequelize");
 const db = require('../dbSequelize.js');
 const User = require('./userModel.js')
 
-const Order = db.define('order',{
+const Shop_order = db.define('shop_order',{
     id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
@@ -28,6 +28,6 @@ const Order = db.define('order',{
     underscored: true
 })
 
-Order.belongsTo(User);
+Shop_order.belongsTo(User);
 
-module.exports = Order;
+module.exports = Shop_order;
